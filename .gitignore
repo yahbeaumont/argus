@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.cache/
+bench-out/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+bench/fixtures/seed.db
+*.db
