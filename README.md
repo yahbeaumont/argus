@@ -1,5 +1,7 @@
 # argus
 
+<img src="docs/banner.png" alt="argus: a research agent over MCP that plans, calls tools and verifies citations, with budget, loop detection and circuit breaker guards, measured on 40 tasks" width="100%">
+
 A research agent that takes a high-level goal, plans, runs tools over **Model Context Protocol**,
 and delivers a report with verified sources. It is measured by a 40-task benchmark with
 deterministic grading.

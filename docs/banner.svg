@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="argus: a research agent over MCP that plans, calls tools and verifies citations, with budget, loop detection and circuit breaker guards measured on 40 tasks">
+  <defs>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#1A1F26" stroke-width="1"/>
+    </pattern>
+    <style>
+      .mono { font-family: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+      .word { font-size: 88px; font-weight: 700; fill: #F2F5F7; letter-spacing: -2px; }
+      .kick { font-size: 12px; fill: #5C6771; }
+      .sub { font-size: 17px; fill: #8B959F; }
+      .card-title { font-size: 12px; fill: #5C6771; }
+      .step { font-size: 13px; fill: #C9D2DA; }
+      .tool { font-size: 13px; fill: #6FE3B0; }
+      .ok { font-size: 13px; fill: #6FE3B0; }
+      .warn { font-size: 13px; fill: #F0B357; }
+      .bad { font-size: 13px; fill: #E06C5A; }
+      .dim { font-size: 13px; fill: #5C6771; }
+      .foot { font-size: 12px; fill: #5C6771; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="640" fill="#0B0D10"/>
+  <rect width="1280" height="640" fill="url(#grid)" opacity="0.55"/>
+
+  <text class="mono kick" x="80" y="212" letter-spacing="1.5">PYTHON · MCP · GUARDS · BENCHMARK</text>
+  <text class="mono word" x="80" y="292">argus</text>
+  <rect x="80" y="322" width="300" height="3" fill="#F0B357"/>
+  <text class="mono sub" x="80" y="372">A research agent over MCP that plans, calls tools</text>
+  <text class="mono sub" x="80" y="400">and verifies every citation it ships.</text>
+  <text class="mono foot" x="80" y="452">40 tasks · 4 categories · 1 seed · gpt-5-mini</text>
+
+  <rect x="660" y="120" width="540" height="404" rx="10" fill="#0F1318" stroke="#232B34" stroke-width="1"/>
+  <text class="mono card-title" x="692" y="158" letter-spacing="0.6">TRACE · BUDGET 18 STEPS · US$ 0.35 PER TASK</text>
+  <path d="M692 176 H1168" stroke="#232B34" stroke-width="1"/>
+
+  <g class="mono step">
+    <text x="692" y="212" class="dim">planner</text>
+    <text x="830" y="212">4 steps</text>
+    <text x="1104" y="212" class="ok">ok</text>
+
+    <text x="692" y="248" class="dim">actor</text>
+    <text x="830" y="248" class="tool">web_search</text>
+    <text x="1104" y="248" class="ok">ok</text>
+
+    <text x="692" y="284" class="dim">actor</text>
+    <text x="830" y="284" class="tool">fetch_page</text>
+    <text x="1010" y="284" class="warn">403</text>
+    <text x="1104" y="284" class="warn">breaker</text>
+
+    <text x="692" y="320" class="dim">actor</text>
+    <text x="830" y="320" class="tool">sqlite_query</text>
+    <text x="1010" y="320" class="dim">12 rows</text>
+    <text x="1104" y="320" class="ok">ok</text>
+
+    <text x="692" y="356" class="dim">loop</text>
+    <text x="830" y="356" class="dim">(tool, args) x3</text>
+    <text x="1104" y="356" class="bad">abort</text>
+
+    <text x="692" y="392" class="dim">citations</text>
+    <text x="830" y="392" class="dim">verified</text>
+    <text x="1104" y="392" class="ok">87.9%</text>
+  </g>
+
+  <path d="M692 416 H1168" stroke="#232B34" stroke-width="1"/>
+  <text class="mono" x="692" y="448" font-size="15" fill="#F2F5F7">75.0% with guards · 62.5% without</text>
+  <text class="mono foot" x="692" y="472">McNemar p = 0.125 · p95 66.4 s vs 193.9 s · 3 aborts</text>
+
+  <g class="mono" font-size="11" fill="#5C6771">
+    <text x="692" y="500">limits per task: 18 steps · 180k tokens · 180 s · US$ 0.35</text>
+  </g>
+</svg>

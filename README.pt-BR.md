@@ -1,5 +1,7 @@
 # argus
 
+<img src="docs/banner.png" alt="argus: agente de pesquisa sobre MCP que planeja, executa ferramentas e verifica citações, com guardas de orçamento, detecção de loop e circuit breaker, medido em 40 tarefas" width="100%">
+
 Agente de pesquisa que recebe um objetivo de alto nível, planeja, executa ferramentas via
 **Model Context Protocol** e entrega um relatório com fontes verificadas — medido por um
 benchmark de 40 tarefas com grading determinístico.
