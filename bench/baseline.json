@@ -1,0 +1,21 @@
+{
+  "_meta": {
+    "commit": "unknown",
+    "date": "2026-11-25",
+    "model": "gpt-5-mini",
+    "tasks": 40,
+    "note": "preenchido por `python -m bench.gate --update-baseline` após a primeira execução"
+  },
+  "metrics": {
+    "success_rate": 0.75,
+    "p95_latency_s": 66.4173,
+    "loop_aborts": 3.0,
+    "cost_per_task_usd": 0.0037
+  },
+  "tolerance": {
+    "success_rate": 0.075,
+    "p95_latency_s": 15.0,
+    "loop_aborts": 2.0,
+    "cost_per_task_usd": 0.02
+  }
+}
