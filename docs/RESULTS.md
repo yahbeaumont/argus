@@ -6,6 +6,7 @@ Todos os números abaixo saíram de `bench-out/*.json` gerados por `make bench`,
 | Campo | Valor |
 |---|---|
 | Data | 2026-11-25 |
+| Commit medido | `0aa51d4` |
 | Modelo | `gpt-5-mini`, `reasoning_effort=minimal`, temperatura 0,0 no planner e no crítico |
 | Seeds | 1 execução por tarefa (temperatura 0); incerteza vem do bootstrap pareado |
 | Tarefas | 40 (10 síntese, 10 cálculo, 10 dados, 10 adversariais) |

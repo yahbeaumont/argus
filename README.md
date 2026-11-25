@@ -118,7 +118,7 @@ custo, latência e quantas citações têm lastro nas evidências.
 - Preço por token vem de tabela por modelo em `src/argus/llm.py`; modelo fora da tabela custa
   0 e emite warning, em vez de inventar preço.
 - Custo total dos dois braços: US$ 0,34.
-- Execução de 2026-11-25, commit `unknown`, 6 vCPU / 20 GB, sem GPU.
+- Execução de 2026-11-25, commit `0aa51d4`, 6 vCPU / 20 GB, sem GPU.
 
 ## Limitações
 
