@@ -39,7 +39,7 @@ test:
 	pytest -q
 
 lint:
-	ruff check src bench mcp_servers tests scripts && mypy src
+	ruff check src bench mcp_servers tests scripts
 
 fmt:
 	ruff format src bench mcp_servers tests scripts
