@@ -1,152 +1,158 @@
 # argus
 
-Agente de pesquisa que recebe um objetivo de alto nível, planeja, executa ferramentas via
-**Model Context Protocol** e entrega um relatório com fontes verificadas — medido por um
-benchmark de 40 tarefas com grading determinístico.
+A research agent that takes a high-level goal, plans, runs tools over **Model Context Protocol**,
+and delivers a report with verified sources. It is measured by a 40-task benchmark with
+deterministic grading.
 
-Agentes são fáceis de demonstrar e difíceis de confiar. Este repo é sobre a parte difícil:
-orçamento, detecção de loop, circuit breaker por ferramenta, verificação de citação e um
-benchmark que pune enrolação.
+Agents are easy to demo and hard to trust. This repo is about the hard part: budget, loop
+detection, a per-tool circuit breaker, citation verification, and a benchmark that punishes
+padding.
 
-## Resultados do benchmark
+**Português:** [README.pt-BR.md](README.pt-BR.md)
 
-40 tarefas em 4 categorias (10 cada): síntese multi-fonte, cálculo com execução de código,
-consulta a dados estruturados e adversariais (URL morta, tarefa impossível, tentativa de
-injeção de prompt). Mesma seed, mesmo modelo, dois braços: com e sem guardas.
+## Benchmark results
 
-| Configuração | Sucesso | Loops abortados | p50 (s) | p95 (s) | Custo/tarefa | Citações suportadas |
+40 tasks in 4 categories (10 each): multi-source synthesis, calculation with code execution,
+structured data lookup, and adversarial tasks (dead URL, impossible task, prompt injection
+attempt). Same seed, same model, two arms: with and without guards.
+
+| Configuration | Success | Loops aborted | p50 (s) | p95 (s) | Cost/task | Supported citations |
 |---|---|---|---|---|---|---|
-| Sem guardas (controle) | 62,5% | 0/40 | 25,1 | 193,9 | US$ 0,00480 | 87,3% |
-| **argus (guardas completas)** | **75,0%** | 3/40 | 25,7 | 66,4 | US$ 0,00367 | 87,9% |
+| No guards (control) | 62.5% | 0/40 | 25.1 | 193.9 | US$ 0.00480 | 87.3% |
+| **argus (full guards)** | **75.0%** | 3/40 | 25.7 | 66.4 | US$ 0.00367 | 87.9% |
 
-Diferença pareada de sucesso: **+12,5 p.p.** (IC95 0,0 a 25,0 p.p.), McNemar exato p = 0,125 com
-40 pares. Com 40 tarefas o intervalo é largo: o efeito é direcional, não estatisticamente significativo a 5%.
+Paired difference in success: **+12.5 pp** (95% CI 0.0 to 25.0 pp), exact McNemar p = 0.125 over
+40 pairs. With 40 tasks the interval is wide: the effect is directional, not statistically
+significant at 5%.
 
-| Categoria | Sem guardas | argus |
+| Category | No guards | argus |
 |---|---|---|
-| Síntese multi-fonte | 9/10 | 8/10 |
-| Cálculo/código | 6/10 | 6/10 |
-| Dados estruturados | 4/10 | 6/10 |
-| Adversariais | 6/10 | 10/10 |
+| Multi-source synthesis | 9/10 | 8/10 |
+| Calculation/code | 6/10 | 6/10 |
+| Structured data | 4/10 | 6/10 |
+| Adversarial | 6/10 | 10/10 |
 
-![Sucesso por categoria nos dois braços](docs/img/success-by-category.png)
+![Success by category in both arms](docs/img/success-by-category.png)
 
-![Custo e latência por tarefa](docs/img/cost-vs-latency.png)
+![Cost and latency per task](docs/img/cost-vs-latency.png)
 
-![Verificação de citações e abortos](docs/img/citations-and-aborts.png)
+![Citation verification and aborts](docs/img/citations-and-aborts.png)
 
-![Resumo do A/B pareado: sucesso, p95 e custo por tarefa](docs/img/ab-summary.png)
+![Paired A/B summary: success, p95 and cost per task](docs/img/ab-summary.png)
 
-![Distribuição de latência por tarefa nos dois braços](docs/img/latency-distribution.png)
+![Latency distribution per task in both arms](docs/img/latency-distribution.png)
 
-Metodologia completa, variância e falhas observadas em [`docs/RESULTS.md`](docs/RESULTS.md).
+Full methodology, variance and observed failures in [`docs/RESULTS.md`](docs/RESULTS.md) (in
+Portuguese).
 
-## O que os guardas fazem
+## What the guards do
 
-| Guarda | Regra | Efeito medido |
+| Guard | Rule | Measured effect |
 |---|---|---|
-| `BudgetGuard` | 18 passos, 180k tokens, 180 s, US$ 0,35 por tarefa | encerra com o que já coletou em vez de estourar a conta |
-| `LoopDetector` | hash de `(tool, args)`; no limite avisa o ator, e aborta se ele insistir | 3 abortos no braço com guarda |
-| `CircuitBreaker` | 3 falhas da mesma ferramenta em 120 s abrem o circuito | evita cascata quando a busca começa a devolver 403 |
-| `citations.verify` | toda URL do relatório precisa existir nas evidências coletadas | 87,9% das citações com lastro real |
+| `BudgetGuard` | 18 steps, 180k tokens, 180 s, US$ 0.35 per task | finishes with what it has instead of blowing the bill |
+| `LoopDetector` | hash of `(tool, args)`; at the limit it warns the actor and aborts if it insists | 3 aborts in the guarded arm |
+| `CircuitBreaker` | 3 failures of the same tool within 120 s open the circuit | prevents a cascade when search starts returning 403 |
+| `citations.verify` | every URL in the report must exist in the collected evidence | 87.9% of citations with real support |
 
-O `LoopDetector` merece uma nota: ele **não** mascara o problema. A primeira repetição vira
-aviso explícito no prompt do ator; se a mesma chamada voltar, a execução é encerrada com
-`abort_reason=loop:<ferramenta>` e o writer produz o relatório com o que existe. Abortar é
-melhor que pagar 18 passos idênticos, mas o custo aparece: das 3 tarefas
-abortadas, 2 não passaram no grader.
+The `LoopDetector` deserves a note: it does **not** paper over the problem. The first repetition
+becomes an explicit warning in the actor prompt; if the same call comes back, the run ends with
+`abort_reason=loop:<tool>` and the writer produces a report from what exists. Aborting beats
+paying for 18 identical steps, but the cost shows: of the 3 aborted tasks, 2 did not pass the
+grader.
 
-## Arquitetura
+## Architecture
 
 ```mermaid
 flowchart TD
-    T[Objetivo] --> P[Planner: 3 a 6 passos]
+    T[Goal] --> P[Planner: 3 to 6 steps]
     P --> G{BudgetGuard}
-    G -- estourou --> W[Writer]
-    G -- ok --> A[Actor: escolhe ferramenta via MCP]
+    G -- exhausted --> W[Writer]
+    G -- ok --> A[Actor: picks a tool over MCP]
     A --> L{LoopDetector}
-    L -- repetiu demais --> X[Aborta com abort_reason=loop]
-    L -- ok --> CB{CircuitBreaker aberto?}
-    CB -- sim --> F[Pula a ferramenta]
-    CB -- não --> E[Executa no servidor MCP]
-    E --> O[Observação truncada em 8k]
-    O --> C{Critic: evidência basta?}
-    C -- não --> G
-    C -- sim --> W
+    L -- repeated too often --> X[Abort with abort_reason=loop]
+    L -- ok --> CB{Circuit breaker open?}
+    CB -- yes --> F[Skip the tool]
+    CB -- no --> E[Run on the MCP server]
+    E --> O[Observation truncated to 8k]
+    O --> C{Critic: is the evidence enough?}
+    C -- no --> G
+    C -- yes --> W
     F --> G
     X --> W
-    W --> V[Verificação de citações]
-    V --> R[Relatório + métricas]
+    W --> V[Citation verification]
+    V --> R[Report plus metrics]
 ```
 
-Ferramentas expostas pelo servidor MCP (stdio):
+Tools exposed by the MCP server (stdio):
 
-| Ferramenta | Descrição | Guarda |
+| Tool | Description | Guard |
 |---|---|---|
-| `web_search` | busca (DuckDuckGo ou Tavily) com cache em disco | timeout 15 s, cache por query |
-| `fetch_page` | extrai texto principal da URL | só http(s), bloqueio de IP privado, limite 1 MB |
-| `python_exec` | executa snippet isolado | 10 s de CPU, 512 MB, sem rede, cwd temporário |
-| `sqlite_query` | SELECT na base de fixtures | só leitura, limite 500 linhas |
-| `calculator` | aritmética exata | whitelist de caracteres |
+| `web_search` | search (DuckDuckGo or Tavily) with a disk cache | 15 s timeout, cache per query |
+| `fetch_page` | extracts the main text from a URL | http(s) only, private IP blocking, 1 MB limit |
+| `python_exec` | runs an isolated snippet | 10 s CPU, 512 MB, no network, temporary cwd |
+| `sqlite_query` | SELECT against the fixtures database | read-only, 500 row limit |
+| `calculator` | exact arithmetic | character whitelist |
 
-## Rodar
+## Running it
 
 ```bash
-cp .env.example .env       # OPENAI_API_KEY e, opcionalmente, TAVILY_API_KEY
+cp .env.example .env       # OPENAI_API_KEY and, optionally, TAVILY_API_KEY
 make install
-make fixture               # cria bench/fixtures/seed.db a partir do seed.sql
-make smoke                 # 3 tarefas, para conferir o encanamento
-make bench                 # 40 tarefas com guardas
-make bench-unguarded       # braço de controle
-make ab                    # A/B pareado com bootstrap e McNemar
-make plots                 # gráficos a partir dos JSONs reais
+make fixture               # builds bench/fixtures/seed.db from seed.sql
+make smoke                 # 3 tasks, to check the plumbing
+make bench                 # 40 tasks with guards
+make bench-unguarded       # control arm
+make ab                    # paired A/B with bootstrap and McNemar
+make plots                 # charts from the real JSONs
 ```
 
-Execução única:
+A single run:
 
 ```bash
-argus run "Compare o crescimento de adoção de RAG e de fine-tuning em papers de 2024 e 2025, com números"
+argus run "Compare the adoption growth of RAG and fine-tuning in 2024 and 2025 papers, with numbers"
 ```
 
-O relatório sai em Markdown, com a seção `## Fontes`; o CLI imprime também passos, tokens,
-custo, latência e quantas citações têm lastro nas evidências.
+The report comes out as Markdown with a `## Sources` section; the CLI also prints steps, tokens,
+cost, latency, and how many citations are backed by the collected evidence.
 
-## Medição
+## Measurement
 
-- Modelo: `gpt-5-mini` com `reasoning_effort=minimal` (modelos de raciocínio gastam o orçamento
-  de saída pensando e devolvem resposta vazia quando `max_tokens` é pequeno).
-- Preço por token vem de tabela por modelo em `src/argus/llm.py`; modelo fora da tabela custa
-  0 e emite warning, em vez de inventar preço.
-- Custo total dos dois braços: US$ 0,34.
-- Execução de 2026-11-25, commit `0aa51d4`, 6 vCPU / 20 GB, sem GPU.
+- Model: `gpt-5-mini` with `reasoning_effort=minimal` (reasoning models spend the output budget
+  thinking and return an empty answer when `max_tokens` is small).
+- Token price comes from a per-model table in `src/argus/llm.py`; a model outside the table costs
+  0 and emits a warning instead of inventing a price.
+- Total cost of both arms: US$ 0.34.
+- Run of 2026-11-25, commit `0aa51d4`, 6 vCPU / 20 GB, no GPU.
 
-## Limitações
+## Limitations
 
-- **Busca**: o provedor padrão é o HTML do DuckDuckGo, sem chave. Em execuções com
-  concorrência 3 ele começa a responder 403; o cache reduz a repetição, mas não elimina o
-  problema. Tavily é suportado por configuração.
-- **`python_exec` não é sandbox de segurança**: é `subprocess` com `-I -S`, `setrlimit` e sem
-  rede. Não rode código hostil de verdade nele.
-- **Uma seed, não três**: a medição usa temperatura 0 e uma execução por tarefa. A incerteza
-  reportada vem do bootstrap pareado sobre as 40 tarefas, não de variância entre seeds.
-- **Sem tarefas profundas**: nenhuma tarefa exige mais de três saltos de ferramenta, então o
-  benchmark não mede pesquisa longa.
-- **MCP SDK**: o projeto fixa `mcp>=1.2,<2`. Com o SDK 2.x o handshake do cliente trava neste
-  ambiente; o servidor já tem shim para os dois nomes (`FastMCP`/`MCPServer`).
-- **Grading determinístico** cobre termos, números e fontes vivas; ele não julga qualidade de
-  prosa. Um relatório correto e mal escrito passa; um relatório bonito e errado não.
+- **Search**: the default provider is DuckDuckGo's HTML endpoint, no key required. Under
+  concurrency 3 it starts answering 403; the cache reduces repetition but does not eliminate the
+  problem. Tavily is supported by configuration.
+- **`python_exec` is not a security sandbox**: it is a `subprocess` with `-I -S`, `setrlimit` and
+  no network. Do not run genuinely hostile code in it.
+- **One seed, not three**: the measurement uses temperature 0 and one run per task. The reported
+  uncertainty comes from the paired bootstrap over the 40 tasks, not from variance across seeds.
+- **No deep tasks**: no task requires more than three tool hops, so the benchmark does not measure
+  long research.
+- **MCP SDK**: the project pins `mcp>=1.2,<2`. With SDK 2.x the client handshake hangs in this
+  environment; the server already ships a shim for both names (`FastMCP`/`MCPServer`).
+- **Deterministic grading** covers terms, numbers and live sources; it does not judge prose
+  quality. A correct, badly written report passes; a polished, wrong one does not.
 
-## Estrutura
+## Layout
 
 ```text
-src/argus/          graph, guards, llm, citations, telemetry, nós do agente
-mcp_servers/        servidor MCP stdio com as cinco ferramentas
+src/argus/          graph, guards, llm, citations, telemetry, agent nodes
+mcp_servers/        stdio MCP server with the five tools
 bench/              tasks.jsonl, graders, run_bench, ab, gate, regrade, report
 scripts/            reproduce.sh, plot_results.py
-tests/              guardas, graders, gate, A/B, llm, citações, sandbox
+tests/              guards, graders, gate, A/B, llm, citations, sandbox
 docs/               RESULTS.md, THREAT_MODEL.md, img/
 ```
 
-## Licença
+The documents under `docs/` are written in Portuguese.
+
+## License
 
 MIT.
